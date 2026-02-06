@@ -1,16 +1,17 @@
 [project]
-name = "task-cli"
+name = "docgen-cli"
 version = "0.1.0"
-description = "A command-line task manager"
+description = "An AI-powered documentation generator for source code"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "rich>=14.2.0",
     "typer>=0.21.0",
+    "openai>=1.82.0",
 ]
 
 [project.scripts]
-task = "task.main:app"
+docgen = "docgen.main:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -22,4 +23,4 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/task"]
+packages = ["src/docgen"]

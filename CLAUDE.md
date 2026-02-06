@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-A command-line task management application for tracking todos with priorities and due dates.
+An AI-powered documentation generator for source code files.
 
 ## Tech Stack
 
@@ -11,84 +11,75 @@ A command-line task management application for tracking todos with priorities an
 | Data Validation | dataclasses |
 | Output Formatting | Rich |
 | Storage | JSON file |
+| LLM | OpenAI Python SDK |
 | Packaging | pyproject.toml + hatchling |
 | Dependency Management | uv |
 
 ## Development
 
 ```bash
-uv run task <command>
+uv run docgen <command>
 uv run pytest          # run tests
 ```
 
 ## Architecture
 
 ```
-src/task/
-├── main.py           # Entry point, imports app from commands
-├── commands/
-│   ├── __init__.py   # Creates main app, registers all command sub-apps
-│   ├── add.py        # add command
-│   ├── list.py       # list command
-│   └── done.py       # done command (mark task as completed)
-├── models.py         # Task dataclass, Priority enum (low/medium/high)
-├── storage.py        # JSON persistence (load_tasks, save_tasks, add_task, get_tasks, delete_task)
-├── display.py        # Output formatting (success/error/warning/info/table)
-└── constants.py      # EXIT_SUCCESS=0, EXIT_ERROR=1, EXIT_INVALID_INPUT=2
-
-tests/
-├── conftest.py       # Fixtures: runner, temp_storage, sample_data
-├── test_add.py       # Tests for add command
-├── test_list.py      # Tests for list command
-└── test_done.py      # Tests for done command
+src/docgen/
+    main.py           # Entry point, imports app from commands
+    commands/
+        __init__.py   # Creates main app, registers all command sub-apps
+        generate.py   # generate command (calls LLM)
+        list.py       # list command
+        check.py      # check command (calls LLM)
+        update.py     # update command
+    models.py         # DocEntry dataclass, DocStatus enum (current/stale/error)
+    storage.py        # JSON persistence (load_entries, save_entries, add_entry, get_entries, find_entry, delete_entry)
+    display.py        # Output formatting (success/error/warning/info/table)
+    llm.py            # OpenAI SDK wrapper (generate_documentation, check_accuracy, generate_summary)
+    constants.py      # EXIT_SUCCESS=0, EXIT_ERROR=1, EXIT_INVALID_INPUT=2
 ```
 
-**Flow**: `main.py` → `commands/__init__.py` → command file → storage/display
+**Flow**: `main.py` -> `commands/__init__.py` -> command file -> llm/storage/display
 
 ## Data Models
 
-**Priority** (str, Enum): `LOW = "low"`, `MEDIUM = "medium"`, `HIGH = "high"`
+**DocStatus** (str, Enum): `CURRENT = "current"`, `STALE = "stale"`, `ERROR = "error"`
 
-**Task** (dataclass):
+**DocEntry** (dataclass):
 | Field | Type | Default |
 |-------|------|---------|
-| `title` | `str` | required |
-| `done` | `bool` | `False` |
-| `priority` | `Priority` | `Priority.LOW` |
-| `created_at` | `datetime` | `datetime.now()` |
-| `due_date` | `datetime \| None` | `None` |
+| `source_file` | `str` | required |
+| `doc_file` | `str` | required |
+| `status` | `DocStatus` | `DocStatus.CURRENT` |
+| `generated_at` | `datetime` | `datetime.now()` |
+| `source_hash` | `str` | `""` |
 
 ## Storage
 
-Data is persisted in `~/.task/tasks.json`:
+Data is persisted in `~/.docgen/docs.json`:
 
 ```json
 {
   "version": 1,
-  "tasks": [
+  "entries": [
     {
-      "title": "Buy milk",
-      "done": false,
-      "priority": "low",
-      "created_at": "2025-12-26T10:30:00",
-      "due_date": null
+      "source_file": "utils.py",
+      "doc_file": "docs/utils.md",
+      "status": "current",
+      "generated_at": "2025-12-26T10:30:00",
+      "source_hash": "a1b2c3..."
     }
   ]
 }
 ```
 
-- **Version field**: For future schema migrations
-- **ID strategy**: IDs are derived from array position (index + 1), not stored in JSON
-  - IDs are always sequential: 1, 2, 3...
-  - After delete, remaining tasks reindex
-
 ## Rules
 
 **Input validation:**
-- Title: non-empty after strip
-- Priority: must be "low", "medium", or "high" (case-insensitive)
-- Due date: YYYY-MM-DD format
+- Source file: must exist and be a file
+- Source file: must not be empty
+- Status filter: must be "current", "stale", or "error" (case-insensitive)
 
-**Defaults & behavior:**
-- New tasks default to "low" priority
-- Deleting requires `[y/N]` confirmation unless `--force`
+**Environment:**
+- `OPENAI_API_KEY` must be set for generate, check, and update commands

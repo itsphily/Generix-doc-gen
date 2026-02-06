@@ -1,1 +1,1 @@
-"""Test suite for task-cli."""
+"""Test suite for docgen."""

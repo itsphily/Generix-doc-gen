@@ -1,4 +1,4 @@
-from task.commands import app
+from docgen.commands import app
 
 if __name__ == "__main__":
     app()
