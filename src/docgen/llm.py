@@ -1,11 +1,15 @@
 import os
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 import typer
 
 from docgen import display
 from docgen.constants import EXIT_ERROR
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 def _get_client() -> OpenAI:

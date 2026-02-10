@@ -57,7 +57,7 @@ src/docgen/
 
 ## Storage
 
-Data is persisted in `~/.docgen/docs.json`:
+Data is persisted in `.docgen/docs.json` (project-local):
 
 ```json
 {

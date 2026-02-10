@@ -4,7 +4,7 @@ from pathlib import Path
 
 from docgen.models import DocEntry, DocStatus
 
-STORAGE_DIR = Path.home() / ".docgen"
+STORAGE_DIR = Path.cwd() / ".docgen"
 STORAGE_PATH = STORAGE_DIR / "docs.json"
 
 
