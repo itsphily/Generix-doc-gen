@@ -6,3 +6,7 @@ docs/
 .DS_Store
 .env
 .docgen/
+
+# Exercise answers (kept locally, not shipped to students)
+.claude/skills/reviewing-documentation/
+.claude/agents/
